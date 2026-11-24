@@ -1,6 +1,7 @@
-# Compliance record — diagramlint (scaffold)
+# Compliance record — diagramlint
 
-Recorded 2026-11-23 at the scaffold step. The authoritative record is
+Recorded 2026-11-23 at the scaffold step; publication section synced
+2026-11-24 after publication. The authoritative record is
 the 2026-11-22 addendum in the brand goal's IP/legal compliance ledger
 (IP_LEGAL_COMPLIANCE_LEDGER_2026-11-10.md); this file is the in-tree
 summary.
@@ -32,5 +33,15 @@ summary.
   or vendored code was introduced.
 - Scans: secrets-pattern sweep and the reference-integrity scan are
   stages of validate.py and must pass on the exact tree before any
-  publication. Publication has NOT happened: this scaffold is local
-  only, and read-back verification will be required after any push.
+  publication.
+- Publication: PUBLISHED 2026-11-24 to
+  https://github.com/ranadhir19/diagramlint under the full gate
+  (validate.py OVERALL PASS 9/9 and employer-reference scan 0 hits re-run
+  at push time; read-back verification 24/24 non-empty files
+  sha256-matched the publication-gate manifest byte-identically).
+  Recorded exception: the two zero-byte package markers
+  (examples/sample_app/sample_app/__init__.py, tests/__init__.py)
+  are absent from the published repo — both upload routes reject
+  empty content and no placeholder content was substituted.
+  Functionally inert (Python 3 namespace packages). This sync
+  corrects the pre-publication wording that stood before it.
