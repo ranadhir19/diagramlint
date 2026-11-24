@@ -1,0 +1,75 @@
+name: "diagramlint"
+description: >-
+  Check a committed architecture diagram's edges against a statically
+  extracted dependency graph: supported, reversed, invented and missing
+  edges, each with file:line evidence, a machine-readable receipt and
+  a CI exit code.
+author: "Ranadhir Ghosh"
+branding:
+  icon: "git-pull-request"
+  color: "purple"
+inputs:
+  diagram:
+    description: "Path to the diagram file (Mermaid .mmd/.md or JSON)."
+    required: true
+  code:
+    description: "Root of the code tree to scan."
+    required: true
+  config:
+    description: "Optional diagramcheck.toml (node mapping and waivers)."
+    required: false
+    default: ""
+  baseline:
+    description: >-
+      Optional baseline receipt JSON. Findings already in the baseline
+      are reported as known drift; only new reversed findings fail.
+    required: false
+    default: ""
+  strict:
+    description: "When 'true', no-evidence edges also fail the build."
+    required: false
+    default: "false"
+  lang:
+    description: "Extractor language: auto, python or javascript."
+    required: false
+    default: "auto"
+  granularity:
+    description: "Python component granularity: package or module."
+    required: false
+    default: "package"
+  python-version:
+    description: "Python version used to run diagramlint."
+    required: false
+    default: "3.12"
+outputs:
+  receipt:
+    description: "Path to the JSON receipt written by the check."
+    value: ${{ steps.check.outputs.receipt }}
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Install diagramlint
+      shell: bash
+      run: python -m pip install "${{ github.action_path }}"
+    - name: Run diagramlint check
+      id: check
+      shell: bash
+      run: |
+        receipt="${RUNNER_TEMP:-/tmp}/diagramlint-receipt.json"
+        echo "receipt=$receipt" >> "$GITHUB_OUTPUT"
+        args=(check "${{ inputs.diagram }}" --code "${{ inputs.code }}"
+              --lang "${{ inputs.lang }}"
+              --granularity "${{ inputs.granularity }}" --format json)
+        if [ -n "${{ inputs.config }}" ]; then
+          args+=(--config "${{ inputs.config }}")
+        fi
+        if [ -n "${{ inputs.baseline }}" ]; then
+          args+=(--baseline "${{ inputs.baseline }}")
+        fi
+        if [ "${{ inputs.strict }}" = "true" ]; then
+          args+=(--strict)
+        fi
+        diagramlint "${args[@]}" | tee "$receipt"
