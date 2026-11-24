@@ -1,0 +1,26 @@
+name: diagramlint self-check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run the validation harness
+        run: python validate.py
+      - name: Exercise the action's baseline flow on the sample app
+        shell: bash
+        run: |
+          python -m pip install .
+          diagramlint baseline examples/sample_app/diagram.mmd \
+            --code examples/sample_app/sample_app \
+            --out "${RUNNER_TEMP}/base.json"
+          diagramlint check examples/sample_app/diagram.mmd \
+            --code examples/sample_app/sample_app \
+            --baseline "${RUNNER_TEMP}/base.json"
